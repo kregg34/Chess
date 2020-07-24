@@ -143,12 +143,27 @@ def blocked_by_own(x, y, color):
     return False
 
 
+def blocked_by_enemy(x, y, color):
+    if color == "white":
+        for piece in black_pieces:
+            if piece.x == x and piece.y == y:
+                return True
+    else:
+        for piece in white_pieces:
+            if piece.x == x and piece.y == y:
+                return True
+    return False
+
+
+# TODO: add a capture_moves list, have blocked_by_enemy return both True/False plus the capture move.
 def get_north_moves(x_start, y_start, color, max_distance=7):
     moves = []
     for y in range(y_start - 1, y_start - max_distance - 1, -1):
         if y < 0 or blocked_by_own(x_start, y, color):
             break
         moves.append([x_start, y])
+        if blocked_by_enemy(x_start, y, color):
+            break
     return moves
 
 
@@ -158,6 +173,8 @@ def get_south_moves(x_start, y_start, color, max_distance=7):
         if y > 7 or blocked_by_own(x_start, y, color):
             break
         moves.append([x_start, y])
+        if blocked_by_enemy(x_start, y, color):
+            break
     return moves
 
 
@@ -167,6 +184,8 @@ def get_east_moves(x_start, y_start, color, max_distance=7):
         if x > 7 or blocked_by_own(x, y_start, color):
             break
         moves.append([x, y_start])
+        if blocked_by_enemy(x, y_start, color):
+            break
     return moves
 
 
@@ -176,6 +195,8 @@ def get_west_moves(x_start, y_start, color, max_distance=7):
         if x < 0 or blocked_by_own(x, y_start, color):
             break
         moves.append([x, y_start])
+        if blocked_by_enemy(x, y_start, color):
+            break
     return moves
 
 
@@ -185,6 +206,8 @@ def get_northeast_moves(x_start, y_start, color, max_distance=7):
         if x > 7 or y < 0 or blocked_by_own(x, y, color):
             break
         moves.append([x, y])
+        if blocked_by_enemy(x, y, color):
+            break
     return moves
 
 
@@ -195,6 +218,8 @@ def get_northwest_moves(x_start, y_start, color, max_distance=7):
         if x < 0 or y < 0 or blocked_by_own(x, y, color):
             break
         moves.append([x, y])
+        if blocked_by_enemy(x, y, color):
+            break
     return moves
 
 
@@ -204,6 +229,8 @@ def get_southeast_moves(x_start, y_start, color, max_distance=7):
         if x > 7 or y > 7 or blocked_by_own(x, y, color):
             break
         moves.append([x, y])
+        if blocked_by_enemy(x, y, color):
+            break
     return moves
 
 
@@ -213,6 +240,8 @@ def get_southwest_moves(x_start, y_start, color, max_distance=7):
         if x < 0 or y > 7 or blocked_by_own(x, y, color):
             break
         moves.append([x, y])
+        if blocked_by_enemy(x, y, color):
+            break
     return moves
 
 
