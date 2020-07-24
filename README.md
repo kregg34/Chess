@@ -8,3 +8,5 @@ Currently a work in progress. Things left to do:
 - Check mates
 - En passant
 - Castling
+- An AI for the other side (using bound and branch)
+- Menu for picking your side and choosing AI difficulty
