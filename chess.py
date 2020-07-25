@@ -2,6 +2,8 @@ from graphics import *
 import math
 from abc import ABC, abstractmethod
 
+# TODO: checks, check mates, pawn promotions, en passant, castling, menu, AI
+
 WIN_SIZE = 600
 win = GraphWin("Chess", WIN_SIZE, WIN_SIZE)
 game_board = []
@@ -155,7 +157,6 @@ def blocked_by_enemy(x, y, color):
     return False
 
 
-# TODO: add a capture_moves list, have blocked_by_enemy return both True/False plus the capture move.
 def get_north_moves(x_start, y_start, color, max_distance=7):
     moves = []
     for y in range(y_start - 1, y_start - max_distance - 1, -1):
@@ -318,6 +319,21 @@ class Piece(ABC):
         if isinstance(self, (Pawn, King, Rook)):
             self.has_moved()
 
+        Piece.piece_capture_check(square_to_move_to)
+
+    @staticmethod
+    def piece_capture_check(square_to_move_to):
+        if white_to_move:
+            for piece in black_pieces.copy():
+                if square_to_move_to.square_x == piece.x and square_to_move_to.square_y == piece.y:
+                    piece.img.undraw()
+                    black_pieces.remove(piece)
+        else:
+            for piece in white_pieces.copy():
+                if square_to_move_to.square_x == piece.x and square_to_move_to.square_y == piece.y:
+                    piece.img.undraw()
+                    white_pieces.remove(piece)
+
     @abstractmethod
     def get_potential_moves(self):
         pass
@@ -339,15 +355,28 @@ class Pawn(Piece):
         potential_moves = []
 
         if self.color == "white":
-            if self.moved:
-                potential_moves.extend(get_north_moves(self.x, self.y, 1))
-            else:
-                potential_moves.extend(get_north_moves(self.x, self.y, 2))
+
+            if not blocked_by_enemy(self.x, self.y - 1, self.color):
+                potential_moves.extend(get_north_moves(self.x, self.y, self.color, 1))
+                if not self.moved and not blocked_by_enemy(self.x, self.y - 2, self.color):
+                    potential_moves.extend(get_north_moves(self.x, self.y, self.color, 2))
+
+            # A pawn can take to the sides
+            if blocked_by_enemy(self.x - 1, self.y - 1, self.color):
+                potential_moves.extend(get_northwest_moves(self.x, self.y, self.color, 1))
+            if blocked_by_enemy(self.x + 1, self.y - 1, self.color):
+                potential_moves.extend(get_northeast_moves(self.x, self.y, self.color, 1))
         else:
-            if self.moved:
-                potential_moves.extend(get_south_moves(self.x, self.y, 1))
-            else:
-                potential_moves.extend(get_south_moves(self.x, self.y, 2))
+            if not blocked_by_enemy(self.x, self.y + 1, self.color):
+                potential_moves.extend(get_south_moves(self.x, self.y, self.color, 1))
+                if not self.moved and not blocked_by_enemy(self.x, self.y + 2, self.color):
+                    potential_moves.extend(get_south_moves(self.x, self.y, self.color, 2))
+
+            # A pawn can take to the sides
+            if blocked_by_enemy(self.x - 1, self.y + 1, self.color):
+                potential_moves.extend(get_southwest_moves(self.x, self.y, self.color, 1))
+            if blocked_by_enemy(self.x + 1, self.y + 1, self.color):
+                potential_moves.extend(get_southeast_moves(self.x, self.y, self.color, 1))
 
         return potential_moves
 
