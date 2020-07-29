@@ -2,7 +2,8 @@ from graphics import *
 import math
 from abc import ABC, abstractmethod
 
-# TODO: checks, check mates, pawn promotions, en passant, castling, menu, AI
+# TODO: checks, check mates, stalemate, pawn promotions, en passant, castling, menu, AI
+# FOr en passant, create a fake piece when a pawn moves two squares. Delete after one turn!
 
 WIN_SIZE = 600
 win = GraphWin("Chess", WIN_SIZE, WIN_SIZE)
@@ -74,31 +75,26 @@ def game_loop():
 
 
 def next_move():
-    global white_to_move
-
-    point = win.getMouse()
-    selected_x, selected_y = find_selected_tile(point)
-    selected_piece = get_piece_on_tile(selected_x, selected_y, white_to_move)
-
+    selected_piece = None
     while True:
         if selected_piece is None:
             point = win.getMouse()
             selected_x, selected_y = find_selected_tile(point)
             selected_piece = get_piece_on_tile(selected_x, selected_y, white_to_move)
+            print(str(selected_piece) + " " + str(selected_x) + " " +  str(selected_y))
             continue
         else:
             # valid piece selection
-            print("You selected a: " + selected_piece.get_name())
-
-            pot_moves = selected_piece.get_potential_moves()
-            print(pot_moves)
-
+            potential_moves = selected_piece.get_potential_moves()
             move_point = win.getMouse()
             selected_x, selected_y = find_selected_tile(move_point)
-            print(str(selected_x) + ", " + str(selected_y))
+            print(str(potential_moves) + " were the potential moves")
 
-            for pot_move in pot_moves:
-                if selected_x == pot_move[0] and selected_y == pot_move[1]:
+            for potential_move in potential_moves:
+                if selected_x == potential_move[0] and selected_y == potential_move[1]:
+                    # TODO: Check if the move is legal
+
+                    # move the piece if it is a legal move
                     selected_piece.move_piece(game_board[selected_x][selected_y])
                     change_turn()
                     break
@@ -257,8 +253,12 @@ def get_knight_moves(x_start, y_start, color):
              [x_start - 2, y_start - 1]]
 
     for mov in moves.copy():
+        if mov[0] > 7 or mov[0] < 0 or mov[1] > 7 or mov[1] < 0:
+            moves.remove(mov)
+            continue
         if blocked_by_own(mov[0], mov[1], color):
             moves.remove(mov)
+
     return moves
 
 
@@ -293,21 +293,6 @@ class Piece(ABC):
         self.y = start_y
         self.color = color
 
-    # TODO: Remove this later, its just for convenience
-    def get_name(self):
-        if isinstance(self, Pawn):
-            return "Pawn"
-        elif isinstance(self, Knight):
-            return "Knight"
-        elif isinstance(self, Rook):
-            return "Rook"
-        elif isinstance(self, Bishop):
-            return "Bishop"
-        elif isinstance(self, Queen):
-            return "Queen"
-        elif isinstance(self, King):
-            return "King"
-
     def move_piece(self, square_to_move_to):
         if isinstance(self, (Pawn, King, Queen, Rook, Knight, Bishop)):
             self.img.undraw()
@@ -320,6 +305,9 @@ class Piece(ABC):
             self.has_moved()
 
         Piece.piece_capture_check(square_to_move_to)
+
+    def update_xy(self, x, y):
+        self.x, self.y = x, y
 
     @staticmethod
     def piece_capture_check(square_to_move_to):
@@ -355,11 +343,11 @@ class Pawn(Piece):
         potential_moves = []
 
         if self.color == "white":
-
-            if not blocked_by_enemy(self.x, self.y - 1, self.color):
+            if not blocked_by_enemy(self.x, self.y - 1, self.color) \
+                    and not blocked_by_enemy(self.x, self.y - 2, self.color) and not self.moved:
+                potential_moves.extend(get_north_moves(self.x, self.y, self.color, 2))
+            elif not blocked_by_enemy(self.x, self.y - 1, self.color):
                 potential_moves.extend(get_north_moves(self.x, self.y, self.color, 1))
-                if not self.moved and not blocked_by_enemy(self.x, self.y - 2, self.color):
-                    potential_moves.extend(get_north_moves(self.x, self.y, self.color, 2))
 
             # A pawn can take to the sides
             if blocked_by_enemy(self.x - 1, self.y - 1, self.color):
@@ -367,10 +355,11 @@ class Pawn(Piece):
             if blocked_by_enemy(self.x + 1, self.y - 1, self.color):
                 potential_moves.extend(get_northeast_moves(self.x, self.y, self.color, 1))
         else:
-            if not blocked_by_enemy(self.x, self.y + 1, self.color):
+            if not blocked_by_enemy(self.x, self.y + 1, self.color) \
+                    and not blocked_by_enemy(self.x, self.y + 2, self.color) and not self.moved:
+                potential_moves.extend(get_south_moves(self.x, self.y, self.color, 2))
+            elif not blocked_by_enemy(self.x, self.y + 1, self.color):
                 potential_moves.extend(get_south_moves(self.x, self.y, self.color, 1))
-                if not self.moved and not blocked_by_enemy(self.x, self.y + 2, self.color):
-                    potential_moves.extend(get_south_moves(self.x, self.y, self.color, 2))
 
             # A pawn can take to the sides
             if blocked_by_enemy(self.x - 1, self.y + 1, self.color):
@@ -504,6 +493,13 @@ class Knight(Piece):
         potential_moves = []
         potential_moves.extend(get_knight_moves(self.x, self.y, self.color))
         return potential_moves
+
+
+class EnPassant:
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 
 main()
