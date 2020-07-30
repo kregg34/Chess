@@ -7,3 +7,5 @@ Currently a work in progress. Features left to add:
 - castling
 - main menu
 - AI
+
+![](chess.gif)
