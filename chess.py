@@ -2,7 +2,7 @@ from graphics import *
 import math
 from abc import ABC, abstractmethod
 
-# TODO: castling, en passant, menu, AI
+# TODO: en passant, menu, AI
 
 WIN_SIZE = 600
 win = GraphWin("Chess", WIN_SIZE, WIN_SIZE)
@@ -13,6 +13,13 @@ black_pieces = []
 white_copy = []
 black_copy = []
 USE_COPIES = False
+
+CASTLE_SELECTION_SQUARES_WHITE = [[0, 7], [2, 7], [6, 7], [7, 7]]
+CASTLE_SELECTION_SQUARES_BLACK = [[0, 0], [2, 0], [6, 0], [7, 0]]
+WHITE_ROOK_LEFT_MAP = CASTLE_SELECTION_SQUARES_WHITE[0:2]
+WHITE_ROOK_RIGHT_MAP = CASTLE_SELECTION_SQUARES_WHITE[2:4]
+BLACK_ROOK_LEFT_MAP = CASTLE_SELECTION_SQUARES_BLACK[0:2]
+BLACK_ROOK_RIGHT_MAP = CASTLE_SELECTION_SQUARES_BLACK[2:4]
 
 white_to_move = True
 
@@ -117,11 +124,71 @@ def next_move():
     selected_x, selected_y = find_selected_tile(clicked_point)
     game_board[selected_piece.x][selected_piece.y].color_square()
 
-    if not valid_move_selection(potential_moves, selected_x, selected_y):
-        return
-    elif king_is_safe(selected_piece, selected_x, selected_y):
-        selected_piece.move_piece(game_board[selected_x][selected_y])
-        change_turn()
+    if not castle_attempt(selected_piece, selected_x, selected_y):
+        if not valid_move_selection(potential_moves, selected_x, selected_y):
+            return
+        elif king_is_safe(selected_piece, selected_x, selected_y):
+            selected_piece.move_piece(game_board[selected_x][selected_y])
+            change_turn()
+
+
+def castle_attempt(selected_piece, selected_x, selected_y):
+    if is_a_king(selected_piece) and selected_castle_square(selected_x, selected_y):
+        if not in_check(selected_piece, get_enemy_pieces()) and not selected_piece.check_if_moved():
+            rook_to_move, rook_pos, king_pos, squares_to_check = get_rook(selected_x, selected_y)
+            for square in squares_to_check:
+                if attacked(square) or blocked_by_piece(square[0], square[1], get_enemy_pieces()) \
+                        or blocked_by_piece(square[0], square[1], get_own_pieces()):
+                    return False
+            selected_piece.move_piece(GameSquare(king_pos[0], king_pos[1]))
+            rook_to_move.move_piece(GameSquare(rook_pos[0], rook_pos[1]))
+            change_turn()
+            return True
+
+
+def attacked(square):
+    for attacking_piece in get_enemy_pieces():
+        for move in attacking_piece.get_potential_moves():
+            if move[0] == square[0] and move[1] == square[1]:
+                return True
+    return False
+
+
+def get_rook(selected_x, selected_y):
+    for piece in get_own_pieces():
+        if isinstance(piece, Rook):
+            if white_to_move:
+                for pos in WHITE_ROOK_LEFT_MAP:
+                    if selected_x == pos[0] and selected_y == pos[1] and piece.x == 0 and piece.y == 7:
+                        return piece, [3, 7], [2, 7], [[2, 7], [3, 7]]
+                for pos in WHITE_ROOK_RIGHT_MAP:
+                    if selected_x == pos[0] and selected_y == pos[1] and piece.x == 7 and piece.y == 7:
+                        return piece, [5, 7], [6, 7], [[5, 7], [6, 7]]
+            else:
+                for pos in BLACK_ROOK_LEFT_MAP:
+                    if selected_x == pos[0] and selected_y == pos[1] and piece.x == 0 and piece.y == 0:
+                        return piece, [3, 0], [2, 0], [[2, 0], [3, 0]]
+                for pos in BLACK_ROOK_RIGHT_MAP:
+                    if selected_x == pos[0] and selected_y == pos[1] and piece.x == 7 and piece.y == 0:
+                        return piece, [5, 0], [6, 0], [[5, 0], [6, 0]]
+
+
+def selected_castle_square(selected_x, selected_y):
+    if white_to_move:
+        sqs = CASTLE_SELECTION_SQUARES_WHITE
+    else:
+        sqs = CASTLE_SELECTION_SQUARES_BLACK
+    for square in sqs:
+        if square[0] == selected_x and square[1] == selected_y:
+            return True
+    return False
+
+
+def is_a_king(selected_piece):
+    if isinstance(selected_piece, King):
+        return True
+    else:
+        return False
 
 
 def in_checkmate():
