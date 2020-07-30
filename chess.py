@@ -2,7 +2,7 @@ from graphics import *
 import math
 from abc import ABC, abstractmethod
 
-# TODO: pawn promotions, en passant, castling, menu, AI
+# TODO: castling, en passant, menu, AI
 # For en passant, create a fake piece when a pawn moves two squares. Delete after one turn!
 
 WIN_SIZE = 600
@@ -83,11 +83,11 @@ def game_loop():
         if in_check(get_king(get_own_pieces()), get_enemy_pieces()):
             if in_checkmate():
                 ending_text("checkmate")
-                clicked_point = win.getMouse()
+                win.getMouse()
                 break
         elif not has_valid_moves():
             ending_text("stalemate")
-            clicked_point = win.getMouse()
+            win.getMouse()
             break
 
 
@@ -472,7 +472,19 @@ class Piece(ABC):
         if isinstance(self, (Pawn, King, Rook)):
             self.has_moved()
 
+        if isinstance(self, Pawn):
+            if self.y == 0 or self.y == 7:
+                Piece.promotion(self)
+
         Piece.piece_capture(square_to_move_to)
+
+    @staticmethod
+    def promotion(promoted_pawn):
+        for piece in get_own_pieces().copy():
+            if piece is promoted_pawn:
+                get_own_pieces().append(Queen(promoted_pawn.x, promoted_pawn.y, promoted_pawn.color))
+                promoted_pawn.img.undraw()
+                get_own_pieces().remove(promoted_pawn)
 
     @staticmethod
     def piece_capture(square_to_move_to):
@@ -656,4 +668,5 @@ class Knight(Piece):
         return get_knight_moves(self.x, self.y)
 
 
-main()
+if __name__ == "__main__":
+    main()
