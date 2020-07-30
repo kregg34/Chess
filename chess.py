@@ -3,7 +3,6 @@ import math
 from abc import ABC, abstractmethod
 
 # TODO: castling, en passant, menu, AI
-# For en passant, create a fake piece when a pawn moves two squares. Delete after one turn!
 
 WIN_SIZE = 600
 win = GraphWin("Chess", WIN_SIZE, WIN_SIZE)
@@ -123,9 +122,6 @@ def next_move():
     elif king_is_safe(selected_piece, selected_x, selected_y):
         selected_piece.move_piece(game_board[selected_x][selected_y])
         change_turn()
-    else:
-        print("Invalid Move! (puts king in check)")
-        return
 
 
 def in_checkmate():
@@ -159,8 +155,9 @@ def in_check(own_king, attacking_pieces):
 
 
 def king_is_safe(selected_piece, move_x, move_y):
-    global white_copy, black_copy
+    global white_copy, black_copy, USE_COPIES
     white_copy, black_copy = get_piece_copies(selected_piece, move_x, move_y)
+    own_king = None
 
     if white_to_move:
         for p in white_copy:
@@ -175,7 +172,6 @@ def king_is_safe(selected_piece, move_x, move_y):
                 break
         enemy_pieces = white_copy
 
-    global USE_COPIES
     USE_COPIES = True
     if in_check(own_king, enemy_pieces):
         USE_COPIES = False
@@ -185,44 +181,11 @@ def king_is_safe(selected_piece, move_x, move_y):
         return True
 
 
-# TODO: clean this up
 def get_piece_copies(selected_piece, move_x, move_y):
     white_pieces_cp, black_pieces_cp = [], []
-    for piece in white_pieces:
-        x, y = piece.x, piece.y
-        if piece is selected_piece:
-            x, y = move_x, move_y
 
-        if isinstance(piece, Pawn):
-            white_pieces_cp.append(Pawn(x, y, "white", False))
-        elif isinstance(piece, Queen):
-            white_pieces_cp.append(Queen(x, y, "white", False))
-        elif isinstance(piece, Knight):
-            white_pieces_cp.append(Knight(x, y, "white", False))
-        elif isinstance(piece, Bishop):
-            white_pieces_cp.append(Bishop(x, y, "white", False))
-        elif isinstance(piece, Rook):
-            white_pieces_cp.append(Rook(x, y, "white", False))
-        elif isinstance(piece, King):
-            white_pieces_cp.append(King(x, y, "white", False))
-
-    for piece2 in black_pieces:
-        x, y = piece2.x, piece2.y
-        if piece2 is selected_piece:
-            x, y = move_x, move_y
-
-        if isinstance(piece2, Pawn):
-            black_pieces_cp.append(Pawn(x, y, "black", False))
-        elif isinstance(piece2, Queen):
-            black_pieces_cp.append(Queen(x, y, "black", False))
-        elif isinstance(piece2, Knight):
-            black_pieces_cp.append(Knight(x, y, "black", False))
-        elif isinstance(piece2, Bishop):
-            black_pieces_cp.append(Bishop(x, y, "black", False))
-        elif isinstance(piece2, Rook):
-            black_pieces_cp.append(Rook(x, y, "black", False))
-        elif isinstance(piece2, King):
-            black_pieces_cp.append(King(x, y, "black", False))
+    add_piece_copies(selected_piece, move_x, move_y, white_pieces, white_pieces_cp, "white")
+    add_piece_copies(selected_piece, move_x, move_y, black_pieces, black_pieces_cp, "black")
 
     # Delete a captured piece from the list
     if white_to_move:
@@ -237,8 +200,29 @@ def get_piece_copies(selected_piece, move_x, move_y):
     return white_pieces_cp, black_pieces_cp
 
 
+def add_piece_copies(selected_piece, move_x, move_y, pieces_to_copy, copy_list, color):
+    for piece in pieces_to_copy:
+        x, y = piece.x, piece.y
+        if piece is selected_piece:
+            x, y = move_x, move_y
+
+        if isinstance(piece, Pawn):
+            copy_list.append(Pawn(x, y, color, False))
+        elif isinstance(piece, Queen):
+            copy_list.append(Queen(x, y, color, False))
+        elif isinstance(piece, Knight):
+            copy_list.append(Knight(x, y, color, False))
+        elif isinstance(piece, Bishop):
+            copy_list.append(Bishop(x, y, color, False))
+        elif isinstance(piece, Rook):
+            copy_list.append(Rook(x, y, color, False))
+        elif isinstance(piece, King):
+            copy_list.append(King(x, y, color, False))
+
+
 def get_selected_piece():
     selected_piece = None
+    selected_x, selected_y = -1, -1
     while True:
         if selected_piece is None:
             point = win.getMouse()
@@ -421,7 +405,6 @@ def get_knight_moves(x_start, y_start):
     return moves
 
 
-# Classes -------------------------------------------------
 class GameSquare:
 
     def __init__(self, square_x, square_y):
