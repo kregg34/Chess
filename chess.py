@@ -2,26 +2,25 @@ from graphics import *
 import math
 from abc import ABC, abstractmethod
 
-# TODO: en passant, menu, AI
-
 WIN_SIZE = 600
 win = GraphWin("Chess", WIN_SIZE, WIN_SIZE)
 game_board = []
-white_pieces = []
-black_pieces = []
+bottom_pieces = []
+top_pieces = []
 
-white_copy = []
-black_copy = []
+bottom_copy = []
+top_copy = []
 USE_COPIES = False
 
-CASTLE_SELECTION_SQUARES_WHITE = [[0, 7], [2, 7], [6, 7], [7, 7]]
-CASTLE_SELECTION_SQUARES_BLACK = [[0, 0], [2, 0], [6, 0], [7, 0]]
-WHITE_ROOK_LEFT_MAP = CASTLE_SELECTION_SQUARES_WHITE[0:2]
-WHITE_ROOK_RIGHT_MAP = CASTLE_SELECTION_SQUARES_WHITE[2:4]
-BLACK_ROOK_LEFT_MAP = CASTLE_SELECTION_SQUARES_BLACK[0:2]
-BLACK_ROOK_RIGHT_MAP = CASTLE_SELECTION_SQUARES_BLACK[2:4]
+CASTLE_SELECTION_SQUARES_BOTTOM = [[0, 7], [2, 7], [6, 7], [7, 7]]
+CASTLE_SELECTION_SQUARES_TOP = [[0, 0], [2, 0], [6, 0], [7, 0]]
+BOTTOM_ROOK_LEFT_MAP = CASTLE_SELECTION_SQUARES_BOTTOM[0:2]
+BOTTOM_ROOK_RIGHT_MAP = CASTLE_SELECTION_SQUARES_BOTTOM[2:4]
+TOP_ROOK_LEFT_MAP = CASTLE_SELECTION_SQUARES_TOP[0:2]
+TOP_ROOK_RIGHT_MAP = CASTLE_SELECTION_SQUARES_TOP[2:4]
 
-white_to_move = True
+bottom_to_move = False
+FLIP_BOARD = True
 
 HEIGHT = 8
 WIDTH = 8
@@ -29,10 +28,53 @@ TILE_LENGTH = WIN_SIZE / 8
 
 
 def main():
+    init_menu()
     init_game_board()
     add_in_pieces()
     game_loop()
     win.close()
+
+
+def init_menu():
+    x_lower, x_upper = 200, 400
+    button1_y_lower, button1_y_upper, button2_y_lower, button2_y_upper = 250, 350, 400, 500
+
+    background = Rectangle(Point(0, 0), Point(WIN_SIZE, WIN_SIZE))
+    background.setFill("black")
+    button1 = Rectangle(Point(x_lower, button1_y_lower), Point(x_upper, button1_y_upper))
+    button1.setFill("grey")
+    button2 = Rectangle(Point(x_lower, button2_y_lower), Point(x_upper, button2_y_upper))
+    button2.setFill("grey")
+    welcome_text = Text(Point(300, 100), "Chess")
+    welcome_text.setTextColor("red")
+    welcome_text.setSize(30)
+    desc_text = Text(Point(300, 150), "Please choose a side...")
+    desc_text.setTextColor("white")
+    desc_text.setSize(20)
+    option_1_text = Text(Point(300, 300), "White")
+    option_1_text.setSize(15)
+    option_2_text = Text(Point(300, 450), "Black")
+    option_2_text.setSize(15)
+
+    background.draw(win)
+    button1.draw(win)
+    button2.draw(win)
+    welcome_text.draw(win)
+    desc_text.draw(win)
+    option_1_text.draw(win)
+    option_2_text.draw(win)
+
+    global bottom_to_move, FLIP_BOARD
+    while True:
+        point = win.getMouse()
+        if x_lower <= point.x <= x_upper and button1_y_lower <= point.y <= button1_y_upper:
+            bottom_to_move = True
+            FLIP_BOARD = False
+            break
+        elif x_lower <= point.x <= x_upper and button2_y_lower <= point.y <= button2_y_upper:
+            bottom_to_move = False
+            FLIP_BOARD = True
+            break
 
 
 def init_game_board():
@@ -61,25 +103,32 @@ def init_game_board():
 
 
 def add_in_pieces():
-    white_pieces.append(King(4, 7, "white"))
-    white_pieces.append(Queen(3, 7, "white"))
-    white_pieces.append(Rook(0, 7, "white"))
-    white_pieces.append(Rook(7, 7, "white"))
-    white_pieces.append(Bishop(2, 7, "white"))
-    white_pieces.append(Bishop(5, 7, "white"))
-    white_pieces.append(Knight(1, 7, "white"))
-    white_pieces.append(Knight(6, 7, "white"))
-    black_pieces.append(King(4, 0, "black"))
-    black_pieces.append(Queen(3, 0, "black"))
-    black_pieces.append(Rook(0, 0, "black"))
-    black_pieces.append(Rook(7, 0, "black"))
-    black_pieces.append(Bishop(2, 0, "black"))
-    black_pieces.append(Bishop(5, 0, "black"))
-    black_pieces.append(Knight(1, 0, "black"))
-    black_pieces.append(Knight(6, 0, "black"))
+    if FLIP_BOARD:
+        bottom_color = "black"
+        top_color = "white"
+    else:
+        bottom_color = "white"
+        top_color = "black"
+
+    bottom_pieces.append(King(4, 7, bottom_color, side="bottom"))
+    bottom_pieces.append(Queen(3, 7, bottom_color, side="bottom"))
+    bottom_pieces.append(Rook(0, 7, bottom_color, side="bottom"))
+    bottom_pieces.append(Rook(7, 7, bottom_color, side="bottom"))
+    bottom_pieces.append(Bishop(2, 7, bottom_color, side="bottom"))
+    bottom_pieces.append(Bishop(5, 7, bottom_color, side="bottom"))
+    bottom_pieces.append(Knight(1, 7, bottom_color, side="bottom"))
+    bottom_pieces.append(Knight(6, 7, bottom_color, side="bottom"))
+    top_pieces.append(King(4, 0, top_color, side="top"))
+    top_pieces.append(Queen(3, 0, top_color, side="top"))
+    top_pieces.append(Rook(0, 0, top_color, side="top"))
+    top_pieces.append(Rook(7, 0, top_color, side="top"))
+    top_pieces.append(Bishop(2, 0, top_color, side="top"))
+    top_pieces.append(Bishop(5, 0, top_color, side="top"))
+    top_pieces.append(Knight(1, 0, top_color, side="top"))
+    top_pieces.append(Knight(6, 0, top_color, side="top"))
     for i in range(0, 8):
-        white_pieces.append(Pawn(i, 6, "white"))
-        black_pieces.append(Pawn(i, 1, "black"))
+        bottom_pieces.append(Pawn(i, 6, bottom_color, side="bottom"))
+        top_pieces.append(Pawn(i, 1, top_color, side="top"))
 
 
 def game_loop():
@@ -124,7 +173,7 @@ def next_move():
     selected_x, selected_y = find_selected_tile(clicked_point)
     game_board[selected_piece.x][selected_piece.y].color_square()
 
-    if not castle_attempt(selected_piece, selected_x, selected_y):
+    if not castling(selected_piece, selected_x, selected_y):
         if not valid_move_selection(potential_moves, selected_x, selected_y):
             return
         elif king_is_safe(selected_piece, selected_x, selected_y):
@@ -132,10 +181,12 @@ def next_move():
             change_turn()
 
 
-def castle_attempt(selected_piece, selected_x, selected_y):
+def castling(selected_piece, selected_x, selected_y):
     if is_a_king(selected_piece) and selected_castle_square(selected_x, selected_y):
         if not in_check(selected_piece, get_enemy_pieces()) and not selected_piece.check_if_moved():
             rook_to_move, rook_pos, king_pos, squares_to_check = get_rook(selected_x, selected_y)
+            if rook_to_move.check_if_moved():
+                return False
             for square in squares_to_check:
                 if attacked(square) or blocked_by_piece(square[0], square[1], get_enemy_pieces()) \
                         or blocked_by_piece(square[0], square[1], get_own_pieces()):
@@ -157,27 +208,27 @@ def attacked(square):
 def get_rook(selected_x, selected_y):
     for piece in get_own_pieces():
         if isinstance(piece, Rook):
-            if white_to_move:
-                for pos in WHITE_ROOK_LEFT_MAP:
+            if bottom_to_move:
+                for pos in BOTTOM_ROOK_LEFT_MAP:
                     if selected_x == pos[0] and selected_y == pos[1] and piece.x == 0 and piece.y == 7:
                         return piece, [3, 7], [2, 7], [[2, 7], [3, 7]]
-                for pos in WHITE_ROOK_RIGHT_MAP:
+                for pos in BOTTOM_ROOK_RIGHT_MAP:
                     if selected_x == pos[0] and selected_y == pos[1] and piece.x == 7 and piece.y == 7:
                         return piece, [5, 7], [6, 7], [[5, 7], [6, 7]]
             else:
-                for pos in BLACK_ROOK_LEFT_MAP:
+                for pos in TOP_ROOK_LEFT_MAP:
                     if selected_x == pos[0] and selected_y == pos[1] and piece.x == 0 and piece.y == 0:
                         return piece, [3, 0], [2, 0], [[2, 0], [3, 0]]
-                for pos in BLACK_ROOK_RIGHT_MAP:
+                for pos in TOP_ROOK_RIGHT_MAP:
                     if selected_x == pos[0] and selected_y == pos[1] and piece.x == 7 and piece.y == 0:
                         return piece, [5, 0], [6, 0], [[5, 0], [6, 0]]
 
 
 def selected_castle_square(selected_x, selected_y):
-    if white_to_move:
-        sqs = CASTLE_SELECTION_SQUARES_WHITE
+    if bottom_to_move:
+        sqs = CASTLE_SELECTION_SQUARES_BOTTOM
     else:
-        sqs = CASTLE_SELECTION_SQUARES_BLACK
+        sqs = CASTLE_SELECTION_SQUARES_TOP
     for square in sqs:
         if square[0] == selected_x and square[1] == selected_y:
             return True
@@ -222,22 +273,22 @@ def in_check(own_king, attacking_pieces):
 
 
 def king_is_safe(selected_piece, move_x, move_y):
-    global white_copy, black_copy, USE_COPIES
-    white_copy, black_copy = get_piece_copies(selected_piece, move_x, move_y)
+    global bottom_copy, top_copy, USE_COPIES
+    bottom_copy, top_copy = get_piece_copies(selected_piece, move_x, move_y)
     own_king = None
 
-    if white_to_move:
-        for p in white_copy:
+    if bottom_to_move:
+        for p in bottom_copy:
             if isinstance(p, King):
                 own_king = p
                 break
-        enemy_pieces = black_copy
+        enemy_pieces = top_copy
     else:
-        for p in black_copy:
+        for p in top_copy:
             if isinstance(p, King):
                 own_king = p
                 break
-        enemy_pieces = white_copy
+        enemy_pieces = bottom_copy
 
     USE_COPIES = True
     if in_check(own_king, enemy_pieces):
@@ -249,22 +300,22 @@ def king_is_safe(selected_piece, move_x, move_y):
 
 
 def get_piece_copies(selected_piece, move_x, move_y):
-    white_pieces_cp, black_pieces_cp = [], []
+    bottom_pieces_cp, top_pieces_cp = [], []
 
-    add_piece_copies(selected_piece, move_x, move_y, white_pieces, white_pieces_cp, "white")
-    add_piece_copies(selected_piece, move_x, move_y, black_pieces, black_pieces_cp, "black")
+    add_piece_copies(selected_piece, move_x, move_y, bottom_pieces, bottom_pieces_cp, "white")
+    add_piece_copies(selected_piece, move_x, move_y, top_pieces, top_pieces_cp, "black")
 
     # Delete a captured piece from the list
-    if white_to_move:
-        for p1 in black_pieces_cp.copy():
+    if bottom_to_move:
+        for p1 in top_pieces_cp.copy():
             if p1.x == move_x and p1.y == move_y:
-                black_pieces_cp.remove(p1)
+                top_pieces_cp.remove(p1)
     else:
-        for p2 in white_pieces_cp.copy():
+        for p2 in bottom_pieces_cp.copy():
             if p2.x == move_x and p2.y == move_y:
-                white_pieces_cp.remove(p2)
+                bottom_pieces_cp.remove(p2)
 
-    return white_pieces_cp, black_pieces_cp
+    return bottom_pieces_cp, top_pieces_cp
 
 
 def add_piece_copies(selected_piece, move_x, move_y, pieces_to_copy, copy_list, color):
@@ -274,17 +325,17 @@ def add_piece_copies(selected_piece, move_x, move_y, pieces_to_copy, copy_list, 
             x, y = move_x, move_y
 
         if isinstance(piece, Pawn):
-            copy_list.append(Pawn(x, y, color, False))
+            copy_list.append(Pawn(x, y, color, piece.side, False))
         elif isinstance(piece, Queen):
-            copy_list.append(Queen(x, y, color, False))
+            copy_list.append(Queen(x, y, color, piece.side, False))
         elif isinstance(piece, Knight):
-            copy_list.append(Knight(x, y, color, False))
+            copy_list.append(Knight(x, y, color, piece.side, False))
         elif isinstance(piece, Bishop):
-            copy_list.append(Bishop(x, y, color, False))
+            copy_list.append(Bishop(x, y, color, piece.side, False))
         elif isinstance(piece, Rook):
-            copy_list.append(Rook(x, y, color, False))
+            copy_list.append(Rook(x, y, color, piece.side, False))
         elif isinstance(piece, King):
-            copy_list.append(King(x, y, color, False))
+            copy_list.append(King(x, y, color, piece.side, False))
 
 
 def get_selected_piece():
@@ -315,8 +366,8 @@ def get_king(pieces_to_check):
 
 
 def change_turn():
-    global white_to_move
-    white_to_move = not white_to_move
+    global bottom_to_move
+    bottom_to_move = not bottom_to_move
 
 
 def find_selected_tile(point):
@@ -342,28 +393,28 @@ def blocked_by_piece(x, y, pieces_to_check):
 
 def get_own_pieces():
     if USE_COPIES:
-        if white_to_move:
-            return white_copy
+        if bottom_to_move:
+            return bottom_copy
         else:
-            return black_copy
+            return top_copy
     else:
-        if white_to_move:
-            return white_pieces
+        if bottom_to_move:
+            return bottom_pieces
         else:
-            return black_pieces
+            return top_pieces
 
 
 def get_enemy_pieces():
     if USE_COPIES:
-        if white_to_move:
-            return black_copy
+        if bottom_to_move:
+            return top_copy
         else:
-            return white_copy
+            return bottom_copy
     else:
-        if white_to_move:
-            return black_pieces
+        if bottom_to_move:
+            return top_pieces
         else:
-            return white_pieces
+            return bottom_pieces
 
 
 def get_north_moves(x_start, y_start, max_distance=7):
@@ -504,10 +555,11 @@ class GameSquare:
 
 class Piece(ABC):
 
-    def __init__(self, start_x, start_y, color):
+    def __init__(self, start_x, start_y, color, side):
         self.x = start_x
         self.y = start_y
         self.color = color
+        self.side = side
 
     def update_xy(self, x, y):
         self.x, self.y = x, y
@@ -532,7 +584,8 @@ class Piece(ABC):
     def promotion(promoted_pawn):
         for piece in get_own_pieces().copy():
             if piece is promoted_pawn:
-                get_own_pieces().append(Queen(promoted_pawn.x, promoted_pawn.y, promoted_pawn.color))
+                get_own_pieces().append(Queen(promoted_pawn.x, promoted_pawn.y,
+                                              promoted_pawn.color, promoted_pawn.side))
                 promoted_pawn.img.undraw()
                 get_own_pieces().remove(promoted_pawn)
 
@@ -552,8 +605,8 @@ class Piece(ABC):
 
 class Pawn(Piece):
 
-    def __init__(self, start_x, start_y, color, draw_flag=True):
-        super().__init__(start_x, start_y, color)
+    def __init__(self, start_x, start_y, color, side, draw_flag=True):
+        super().__init__(start_x, start_y, color, side)
         self.moved = False
 
         if self.color == "white":
@@ -565,7 +618,8 @@ class Pawn(Piece):
 
     def get_potential_moves(self):
         potential_moves = []
-        if self.color == "white":
+
+        if self.side == "bottom":
             if not blocked_by_piece(self.x, self.y - 1, get_enemy_pieces()) \
                     and not blocked_by_piece(self.x, self.y - 2, get_enemy_pieces()) and not self.moved:
                 potential_moves.extend(get_north_moves(self.x, self.y, 2))
@@ -598,8 +652,8 @@ class Pawn(Piece):
 
 class King(Piece):
 
-    def __init__(self, start_x, start_y, color, draw_flag=True):
-        super().__init__(start_x, start_y, color)
+    def __init__(self, start_x, start_y, color, side, draw_flag=True):
+        super().__init__(start_x, start_y, color, side)
         self.moved = False
 
         if self.color == "white":
@@ -630,8 +684,8 @@ class King(Piece):
 
 class Queen(Piece):
 
-    def __init__(self, start_x, start_y, color, draw_flag=True):
-        super().__init__(start_x, start_y, color)
+    def __init__(self, start_x, start_y, color, side, draw_flag=True):
+        super().__init__(start_x, start_y, color, side)
 
         if self.color == "white":
             self.img = Image(game_board[start_x][start_y].find_midpoint(), "photos/queen_w.png")
@@ -655,8 +709,8 @@ class Queen(Piece):
 
 class Rook(Piece):
 
-    def __init__(self, start_x, start_y, color, draw_flag=True):
-        super().__init__(start_x, start_y, color)
+    def __init__(self, start_x, start_y, color, side, draw_flag=True):
+        super().__init__(start_x, start_y, color, side)
         self.moved = False
 
         if self.color == "white":
@@ -683,8 +737,8 @@ class Rook(Piece):
 
 class Bishop(Piece):
 
-    def __init__(self, start_x, start_y, color, draw_flag=True):
-        super().__init__(start_x, start_y, color)
+    def __init__(self, start_x, start_y, color, side, draw_flag=True):
+        super().__init__(start_x, start_y, color, side)
 
         if self.color == "white":
             self.img = Image(game_board[start_x][start_y].find_midpoint(), "photos/bishop_w.png")
@@ -704,8 +758,8 @@ class Bishop(Piece):
 
 class Knight(Piece):
 
-    def __init__(self, start_x, start_y, color, draw_flag=True):
-        super().__init__(start_x, start_y, color)
+    def __init__(self, start_x, start_y, color, side, draw_flag=True):
+        super().__init__(start_x, start_y, color, side)
 
         if self.color == "white":
             self.img = Image(game_board[start_x][start_y].find_midpoint(), "photos/knight_w.png")
