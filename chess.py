@@ -106,20 +106,22 @@ def add_in_pieces():
     if FLIP_BOARD:
         bottom_color = "black"
         top_color = "white"
+        king_x, queen_x = 3, 4
     else:
         bottom_color = "white"
         top_color = "black"
+        king_x, queen_x = 4, 3
 
-    bottom_pieces.append(King(4, 7, bottom_color, side="bottom"))
-    bottom_pieces.append(Queen(3, 7, bottom_color, side="bottom"))
+    bottom_pieces.append(King(king_x, 7, bottom_color, side="bottom"))
+    bottom_pieces.append(Queen(queen_x, 7, bottom_color, side="bottom"))
     bottom_pieces.append(Rook(0, 7, bottom_color, side="bottom"))
     bottom_pieces.append(Rook(7, 7, bottom_color, side="bottom"))
     bottom_pieces.append(Bishop(2, 7, bottom_color, side="bottom"))
     bottom_pieces.append(Bishop(5, 7, bottom_color, side="bottom"))
     bottom_pieces.append(Knight(1, 7, bottom_color, side="bottom"))
     bottom_pieces.append(Knight(6, 7, bottom_color, side="bottom"))
-    top_pieces.append(King(4, 0, top_color, side="top"))
-    top_pieces.append(Queen(3, 0, top_color, side="top"))
+    top_pieces.append(King(king_x, 0, top_color, side="top"))
+    top_pieces.append(Queen(queen_x, 0, top_color, side="top"))
     top_pieces.append(Rook(0, 0, top_color, side="top"))
     top_pieces.append(Rook(7, 0, top_color, side="top"))
     top_pieces.append(Bishop(2, 0, top_color, side="top"))
